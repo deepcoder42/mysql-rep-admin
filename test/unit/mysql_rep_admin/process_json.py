@@ -42,9 +42,9 @@ class Mail(object):
     Description:  Class stub holder for gen_class.Mail class.
 
     Methods:
-        __init__ -> Class initialization.
-        add_2_msg -> Stub method holder for Mail.add_2_msg.
-        send_mail -> Stub method holder for Mail.send_mail.
+        __init__
+        add_2_msg
+        send_mail
 
     """
 
@@ -95,13 +95,14 @@ class UnitTest(unittest.TestCase):
     Description:  Class which is a representation of a unit testing.
 
     Methods:
-        setUp -> Initialize testing environment.
-        test_mail -> Test with mail option.
-        test_stdout -> Test with standard out.
-        test_no_stdout -> Test with standard out suppressed.
-        test_file -> Test with sending to file.
-        test_mongo -> Test with mongo connection.
-        test_mongo_missing -> Test with mongo missing one option.
+        setUp
+        test_mail
+        test_stdout
+        test_no_stdout
+        test_file
+        test_mongo_failed
+        test_mongo_successful
+        test_mongo_missing
 
     """
 
@@ -117,6 +118,8 @@ class UnitTest(unittest.TestCase):
 
         self.mail = Mail()
         self.outdata = {"key": "value"}
+        self.status = (True, None)
+        self.status2 = (False, "Error Message")
 
     def test_mail(self):
 
@@ -172,21 +175,42 @@ class UnitTest(unittest.TestCase):
         self.assertFalse(mysql_rep_admin._process_json(
             self.outdata, ofile="FileName", sup_std=True))
 
-    @mock.patch("mysql_rep_admin.mongo_libs.ins_doc",
-                mock.Mock(return_value=True))
-    def test_mongo(self):
+    @mock.patch("mysql_rep_admin.mongo_libs.ins_doc")
+    def test_mongo_failed(self, mock_ins):
 
-        """Function:  test_mongo
+        """Function:  test_mongo_failed
 
-        Description:  Test with mongo connection.
+        Description:  Test with failed mongo connection.
 
         Arguments:
 
         """
 
-        self.assertFalse(mysql_rep_admin._process_json(
-            self.outdata, mongo_cfg="MongoInstance",
-            db_tbl="database:collection", sup_std=True))
+        mock_ins.return_value = self.status2
+
+        with gen_libs.no_std_out():
+            self.assertFalse(
+                mysql_rep_admin._process_json(
+                    self.outdata, class_cfg="MongoInstance",
+                    db_tbl="database:collection", sup_std=True))
+
+    @mock.patch("mysql_rep_admin.mongo_libs.ins_doc")
+    def test_mongo_successful(self, mock_ins):
+
+        """Function:  test_mongo_successful
+
+        Description:  Test with successful mongo connection.
+
+        Arguments:
+
+        """
+
+        mock_ins.return_value = self.status
+
+        self.assertFalse(
+            mysql_rep_admin._process_json(
+                self.outdata, class_cfg="MongoInstance",
+                db_tbl="database:collection", sup_std=True))
 
     def test_mongo_missing(self):
 
@@ -199,7 +223,7 @@ class UnitTest(unittest.TestCase):
         """
 
         self.assertFalse(mysql_rep_admin._process_json(
-            self.outdata, mongo_cfg="MongoInstance", sup_std=True))
+            self.outdata, class_cfg="MongoInstance", sup_std=True))
 
 
 if __name__ == "__main__":

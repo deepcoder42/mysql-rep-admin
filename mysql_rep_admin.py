@@ -14,56 +14,88 @@
         database and multiple slave databases.
 
     Usage:
-        mysql_rep_admin.py -d path [-p path]
-            {-C -c file -s [path]/slave.txt} |
-            {-S -s [path]/slave.txt} |
-            {-B -c file} |
-            {-D -s [path]/slave.txt} |
-            {-T -c file -s [path]/slave.txt [-j [-f]] [-o dir_path/file [-a]]
-                [-b db:coll | -m file]
-                [-t ToEmail {ToEmail2 ...} {-u SubjectLine}]} |
-            {-E -s [path]/slave.txt} |
-            {-A -s [path]/slave.txt} |
-            {-O -s [path]/slave.txt}
-            [-y flavor_id] [-z]
+        mysql_rep_admin.py -d path
+            {-C -c file -s [path/]slave.txt |
+             -S -s [path/]slave.txt |
+             -B -c file |
+             -D -s [path/]slave.txt |
+             -T -c file -s [path]/slave.txt [-j [-f]] [-o dir_path/file [-a]]
+                [-b db:coll -m file]
+                [-t ToEmail [ToEmail2 ...] [-u SubjectLine]] |
+             -E -s [path/]slave.txt |
+             -A -c file -s [path/]slave.txt [-j [-f]] [-o dir_path/file [-a]]
+                [-b db:coll -m file]
+                [-t ToEmail [ToEmail2 ...] [-u SubjectLine]] |
+             -O -s [path/]slave.txt}
+            [-y flavor_id] [-p path] [-z]
             [-v | -h]
 
     Arguments:
         -d dir path => Directory path to the config files (-c). Required arg.
-        -c file => Master config file.
-            For use with the -C, -B, and -T options.
-        -s [path]/slave.txt => Slave config file.
+
         -C => Compare master binlog position to the slaves' and return any
-            differences detected if not the same positions.
+                differences detected if not the same positions.
+            -c file => Master config file.
+            -s [path/]slave.txt => Slave config file.
+
         -S => Check the slave(s) IO and SQL threads and return any errors or
-            warnings detected.
+                warnings detected.
+            -s [path/]slave.txt => Slave config file.
+
         -B => Display the master binlog filename and position.
+            -c file => Master config file.
+
         -D => Display the slave(s) binlog filename and position.
+            -s [path/]slave.txt => Slave config file.
+
         -T => Check time lag for the slave(s) and return any differences
-            detected.
+                detected.
+            -c file => Master config file.
+            -s [path/]slave.txt => Slave config file.
+            -j => Return output in JSON format.
+            -f => Flatten the JSON data structure to file and standard out.
+            -o path/file => Directory path and file name for output.
+            -a => Append output to output file.
+            -b database:collection => Name of database and collection.
+                Default: sysmon:mysql_rep_lag
+            -m file => Insert results into a Mongo database.  File is the Mongo
+                config file.
+            -t to_email_addresses => Enables emailing capability for an option
+                if the option allows it.  Sends output to one or more email
+                addresses.
+            -u subject_line => Subject line of email.  Will create own subject
+                line if one is not provided.
+            NOTE:  If returning as standard format and there is no time lag,
+                nothing will be returned.  However, if -j option is selected,
+                then a JSON doc will be returned even if no time lag.
+
         -E => Check for any replication errors on the slave(s).
-        -A => Does multiple checks which include the following options:
-            (-C, -S, -T, -E)
+            -s [path/]slave.txt => Slave config file.
+
+        -A => Runs multiple checks which include the options:  -C, -S, -T, -E
+            -c file => Master config file.
+            -s [path/]slave.txt => Slave config file.
+            -j => Return output in JSON format.
+            -f => Flatten the JSON data structure to file and standard out.
+            -o path/file => Directory path and file name for output.
+            -a => Append output to output file.
+            -b database:collection => Name of database and collection.
+                Default: sysmon:mysql_rep_lag
+            -m file => Insert results into a Mongo database.  File is the Mongo
+                config file.
+            -t to_email_addresses => Enables emailing capability for an option
+                if the option allows it.  Sends output to one or more email
+                addresses.
+            -u subject_line => Subject line of email.  Will create own subject
+                line if one is not provided.
+            NOTE:  If returning as standard format and there is no time lag,
+                nothing will be returned.  However, if -j option is selected,
+                then a JSON doc will be returned even if no time lag.
+
         -O => Other slave replication checks and return any errors detected.
-        -j => Return output in JSON format, if available.
-            For use with the -T option.
-        -f => Flatten the JSON data structure to file and standard out.
-            For use with the -j option.
-        -o path/file => Directory path and file name for output.
-            Use the -a option to append to an existing file.
-            For use with the -T option.
-        -a => Append output to output file.
-        -b database:collection => Name of database and collection.
-            Default: sysmon:mysql_rep_lag
-        -m file => Insert results into a Mongo database.  File is the Mongo
-            config file.
-            For use with the -T option.
+            -s [path/]slave.txt => Slave config file.
+
         -p dir_path => Directory path to the mysql binary programs.
-        -t to_email_addresses => Enables emailing capability for an option if
-            the option allows it.  Sends output to one or more email addresses.
-            For use with the -T option.
-        -u subject_line => Subject line of email.  Optional, will create own
-            subject line if one is not provided.
         -y value => A flavor id for the program lock.  To create unique lock.
         -z => Suppress standard out.
         -v => Display version of this program.
@@ -73,18 +105,29 @@
 
     Notes:
         Master configuration file format (config/mysql_cfg.py.TEMPLATE):
-        NOTE:  Do not use the loopback IP or 'localhost' for the "host"
-        variable, use the actual IP.
             # Configuration file for Database:
             user = "USER"
-            passwd = "PASSWORD"
-            host = "IP_ADDRESS"
+            japd = "PSWORD"
+            host = "HOST_IP"
             name = "HOSTNAME"
             sid = SERVER_ID
             extra_def_file = "PYTHON_PROJECT/config/mysql.cfg"
             serv_os = "Linux"
             port = 3306
-            cfg_file = "MYSQL_DIRECTORY/my.cnf"
+            cfg_file = "MYSQL_DIRECTORY/mysqld.cnf"
+
+            # If SSL connections are being used, configure one or more of these
+                entries:
+            ssl_client_ca = None
+            ssl_client_key = None
+            ssl_client_cert = None
+
+            # Only changes these if necessary and have knowledge in MySQL
+                SSL configuration setup:
+            ssl_client_flag = None
+            ssl_disabled = False
+            ssl_verify_id = False
+            ssl_verify_cert = False
 
         NOTE 1:  Include the cfg_file even if running remotely as the
             file will be used in future releases.
@@ -97,14 +140,17 @@
             "report-host" and "report-port" must be added to the mysqld.cnf
             file on each of the slaves and the database restarted for it to
             take effect.
+        NOTE 4:  Ignore the Replication user information entries.  They are
+            not required for this program.
 
         configuration modules -> name is runtime dependent as it can be
             used to connect to different databases with different names.
 
+
         Defaults Extra File format (config/mysql.cfg.TEMPLATE):
             [client]
             password="PASSWORD"
-            socket="MYSQL_DIRECTORY/mysql.sock"
+            socket="DIRECTORY_PATH/mysqld.sock"
 
         NOTE 1:  The socket information can be obtained from the my.cnf
             file under ~/mysql directory.
@@ -112,44 +158,94 @@
             is a ~/.my.cnf or ~/.mylogin.cnf file located in the home directory
             of the user running this program.  The extras file will in effect
             be ignored.
+        NOTE 3:  Socket use is only required to be set in certain conditions
+            when connecting using localhost.
+
 
         Slave configuration file format (config/slave.txt.TEMPLATE)
         Make a copy of this section for each slave in the replica set.
-            # Slave 1 configuration
+            # Slave configuration:
             user = USER
-            passwd = PASSWORD
-            host = IP_ADDRESS
+            japd = PSWORD
+            host = HOST_IP
             name = HOSTNAME
             sid = SERVER_ID
             cfg_file = None
             port = 3306
             serv_os = Linux
+            extra_def_file = PYTHON_PROJECT/mysql.cfg
+
+            # If SSL connections are being used, configure one or more of these
+                entries:
+            ssl_client_ca = None
+            ssl_client_key = None
+            ssl_client_cert = None
+
+            # Only changes these if necessary and have knowledge in MySQL
+                SSL configuration setup:
+            ssl_client_flag = None
+            ssl_disabled = False
+            ssl_verify_id = False
+            ssl_verify_cert = False
+
+        NOTE 1:  Ignore the Replication user information entries.  They are
+            not required for this program.
+
 
         Mongo configuration file format (config/mongo.py.TEMPLATE).  The
             configuration file format for the Mongo connection used for
             inserting data into a database.
             There are two ways to connect:  single or replica set.
 
-            1.)  Single database connection:
+            Single database connection:
 
             # Single Configuration file for Mongo Database Server.
             user = "USER"
-            passwd = "PASSWORD"
-            host = "IP_ADDRESS"
+            japd = "PSWORD"
+            host = "HOST_IP"
             name = "HOSTNAME"
             port = 27017
             conf_file = None
             auth = True
+            auth_db = "admin"
+            auth_mech = "SCRAM-SHA-1"
+            use_arg = True
+            use_uri = False
 
-            2.)  Replica Set connection:  Same format as above, but with these
+            Replica Set connection:  Same format as above, but with these
                 additional entries at the end of the configuration file:
 
             repset = "REPLICA_SET_NAME"
-            repset_hosts = "HOST1:PORT, HOST2:PORT, HOST3:PORT, [...]"
+            repset_hosts = "HOST1:PORT, HOST2:PORT, [...]"
             db_auth = "AUTHENTICATION_DATABASE"
 
+            Note:  If using SSL connections then set one or more of the
+                following entries.  This will automatically enable SSL
+                connections. Below are the configuration settings for SSL
+                connections.  See configuration file for details on each entry:
+
+            ssl_client_ca = None
+            ssl_client_key = None
+            ssl_client_cert = None
+            ssl_client_phrase = None
+
+            Note:  FIPS Environment for Mongo.
+              If operating in a FIPS 104-2 environment, this package will
+              require at least a minimum of pymongo==3.8.0 or better.  It will
+              also require a manual change to the auth.py module in the pymongo
+              package.  See below for changes to auth.py.
+
+            - Locate the auth.py file python installed packages on the system
+                in the pymongo package directory.
+            - Edit the file and locate the "_password_digest" function.
+            - In the "_password_digest" function there is an line that should
+                match: "md5hash = hashlib.md5()".  Change it to
+                "md5hash = hashlib.md5(usedforsecurity=False)".
+            - Lastly, it will require the Mongo configuration file entry
+                auth_mech to be set to: SCRAM-SHA-1 or SCRAM-SHA-256.
+
     Example:
-        mysql_rep_admin.py -c master -d config  -s slave.txt -A
+        mysql_rep_admin.py -c master -d config  -s slave.txt -T
 
 """
 
@@ -164,11 +260,11 @@ import datetime
 
 # Third party
 import json
+import ast
 
 # Local
 import lib.arg_parser as arg_parser
 import lib.gen_libs as gen_libs
-import lib.cmds_gen as cmds_gen
 import lib.machine as machine
 import lib.gen_class as gen_class
 import mysql_lib.mysql_class as mysql_class
@@ -329,10 +425,10 @@ def chk_mst_log(master, slaves, **kwargs):
                 print("\nWarning:  Slave lagging in reading master log.")
                 print("Master: {0}".format(master.name))
                 print("\tMaster Log: {0}".format(fname))
-                print("\t\tMaster Pos: {0}".format(log_pos))
+                print("\tMaster Pos: {0}".format(log_pos))
                 print("Slave: {0}".format(name))
                 print("\tSlave Log: {0}".format(mst_file))
-                print("\t\tSlave Pos: {0}".format(read_pos))
+                print("\tSlave Pos: {0}".format(read_pos))
 
             chk_slv(slv, **kwargs)
 
@@ -371,17 +467,17 @@ def chk_slv_thr(master, slaves, **kwargs):
             # Slave IO and run state.
             if not thr or not gen_libs.is_true(run):
                 print(PRT_TEMPLATE.format(name))
-                print("Error:  Slave IO/SQL Threads are down.")
+                print("\tError:  Slave IO/SQL Threads are down.")
 
             # Slave IO thread.
             elif not gen_libs.is_true(io_thr):
                 print(PRT_TEMPLATE.format(name))
-                print("Error:  Slave IO Thread is down.")
+                print("\tError:  Slave IO Thread is down.")
 
             # Slave SQL thread.
             elif not gen_libs.is_true(sql_thr):
                 print(PRT_TEMPLATE.format(name))
-                print("Error:  Slave SQL Thread is down.")
+                print("\tError:  Slave SQL Thread is down.")
 
     else:
         print("\nchk_slv_thr:  Warning:  No Slave instance detected.")
@@ -399,6 +495,7 @@ def chk_slv_err(master, slaves, **kwargs):
 
     """
 
+    print_template = "\nSlave:\t{0}"
     slaves = list(slaves)
 
     if slaves:
@@ -409,18 +506,23 @@ def chk_slv_err(master, slaves, **kwargs):
             iost, sql, io_msg, sql_msg, io_time, sql_time = slv.get_err_stat()
             name = slv.get_name()
 
+            # Connection status
+            if not slv.conn:
+                print(print_template.format(name))
+                print("\tConnection Error:  No connection detected")
+
             # IO error
             if iost:
-                print("\nSlave:\t{0}".format(name))
-                print("IO Error Detected:\t{0}".format(iost))
+                print(print_template.format(name))
+                print("\tIO Error Detected:\t{0}".format(iost))
                 print("\tIO Message:\t{0}".format(io_msg))
 
                 print("\tIO Timestamp:\t{0}".format(io_time))
 
             # SQL error
             if sql:
-                print("\nSlave:\t{0}".format(name))
-                print("SQL Error Detected:\t{0}".format(sql))
+                print(print_template.format(name))
+                print("\tSQL Error Detected:\t{0}".format(sql))
                 print("\tSQL Message:\t{0}".format(sql_msg))
 
                 print("\tSQL Timestamp:\t{0}".format(sql_time))
@@ -429,7 +531,7 @@ def chk_slv_err(master, slaves, **kwargs):
         print("\nchk_slv_err:  Warning:  No Slave instance detected.")
 
 
-def add_miss_slaves(master, outdata, **kwargs):
+def add_miss_slaves(master, outdata):
 
     """Function:  add_miss_slaves
 
@@ -537,7 +639,10 @@ def _process_json(outdata, **kwargs):
 
     if mongo_cfg and db_tbl:
         dbn, tbl = db_tbl.split(":")
-        mongo_libs.ins_doc(mongo_cfg, dbn, tbl, outdata)
+        status = mongo_libs.ins_doc(mongo_cfg, dbn, tbl, outdata)
+
+        if not status[0]:
+            print("\n_process_json:  Error Detected:  %s" % (status[1]))
 
     if ofile:
         gen_libs.write_file(ofile, mode, jdata)
@@ -550,7 +655,7 @@ def _process_json(outdata, **kwargs):
         gen_libs.print_data(jdata)
 
 
-def _process_time_lag(slv, time_lag, name, json_fmt, **kwargs):
+def _process_time_lag(slv, time_lag, name, json_fmt):
 
     """Function:  _process_time_lag
 
@@ -566,14 +671,17 @@ def _process_time_lag(slv, time_lag, name, json_fmt, **kwargs):
 
     """
 
-    if time_lag:
+    if time_lag > 0 or time_lag is None:
         time.sleep(5)
-        slv.upd_slv_time()
+
+        if slv.conn:
+            slv.upd_slv_time()
+
         time_lag = slv.get_time()
 
-        if time_lag and not json_fmt:
+        if (time_lag > 0 or time_lag is None) and not json_fmt:
             print("\nSlave:  {0}".format(name))
-            print("\tTime Lag:  {0}".format(time_lag))
+            print("\tTime Lag:  {0}".format(time_lag or "No Time Detected"))
 
     return time_lag
 
@@ -598,13 +706,13 @@ def chk_slv_other(master, slaves, **kwargs):
         for slv in slaves:
             skip, tmp_tbl, retry = slv.get_others()
             name = slv.get_name()
-            _chk_other(skip, tmp_tbl, retry, name)
+            _chk_other(skip, tmp_tbl, retry, name, slv.version)
 
     else:
         print("\nchk_slv_other:  Warning:  No Slave instance detected.")
 
 
-def _chk_other(skip, tmp_tbl, retry, name, **kwargs):
+def _chk_other(skip, tmp_tbl, retry, name, sql_ver):
 
     """Function:  _chk_other
 
@@ -616,25 +724,27 @@ def _chk_other(skip, tmp_tbl, retry, name, **kwargs):
         (input) tmp_tbl -> Mysql's temp tables created count.
         (input) retry -> Mysql's retry count.
         (input) name -> Name of Mysql server.
+        (input) sql_ver -> Slave's MySQL version.
 
     """
 
     global PRT_TEMPLATE
 
-    if skip > 0 or int(tmp_tbl) > 5 or int(retry) > 0:
+    if skip is None or skip > 0:
         print(PRT_TEMPLATE.format(name))
+        print("\tSkip Count:  {0}".format(skip))
 
-        if skip > 0:
-            print("Skip Count:  {0}".format(skip))
+    if not tmp_tbl or int(tmp_tbl) > 5:
+        print(PRT_TEMPLATE.format(name))
+        print("\tTemp Table Count:  {0}".format(tmp_tbl))
 
-        if int(tmp_tbl) > 5:
-            print("Temp Table Count:  {0}".format(tmp_tbl))
+    if (sql_ver[0] < 8 and (not retry or int(retry) > 0)) \
+       or (sql_ver[0] >= 8 and retry > 0):
+        print(PRT_TEMPLATE.format(name))
+        print("\tRetried Transaction Count:  {0}".format(retry))
 
-        if int(retry) > 0:
-            print("Retried Transaction Count:  {0}".format(retry))
 
-
-def call_run_chk(args_array, func_dict, master, slaves, **kwargs):
+def call_run_chk(args_array, func_dict, master, slaves):
 
     """Function:  call_run_chk
 
@@ -713,6 +823,8 @@ def run_program(args_array, func_dict, **kwargs):
     Arguments:
         (input) args_array -> Array of command line options and values.
         (input) func_dict -> Dictionary list of functions and options.
+        (input) kwargs:
+            slv_key -> Dictionary of keys and data types.
 
     """
 
@@ -724,25 +836,32 @@ def run_program(args_array, func_dict, **kwargs):
         mst_cfg = gen_libs.load_module(args_array["-c"], args_array["-d"])
 
         master = mysql_class.MasterRep(
-            mst_cfg.name, mst_cfg.sid, mst_cfg.user, mst_cfg.passwd,
-            machine=getattr(machine, mst_cfg.serv_os)(), host=mst_cfg.host,
+            mst_cfg.name, mst_cfg.sid, mst_cfg.user, mst_cfg.japd,
+            os_type=getattr(machine, mst_cfg.serv_os)(), host=mst_cfg.host,
             port=mst_cfg.port, defaults_file=mst_cfg.cfg_file)
-        master.connect()
+        master.connect(silent=True)
 
-    slaves = []
-
-    if "-s" in args_array:
-        slv_cfg = cmds_gen.create_cfg_array(args_array["-s"],
-                                            cfg_path=args_array["-d"])
-        slaves = mysql_libs.create_slv_array(slv_cfg)
-
-    call_run_chk(args_array, func_dict, master, slaves)
-
-    if master:
-        cmds_gen.disconnect(master, slaves)
+    if master and master.conn_msg:
+        print("run_program:  Error encountered on server(%s): %s" %
+              (master.name, master.conn_msg))
 
     else:
-        cmds_gen.disconnect(slaves)
+        slaves = []
+
+        if "-s" in args_array:
+            slv_cfg = gen_libs.create_cfg_array(args_array["-s"],
+                                                cfg_path=args_array["-d"])
+            slv_cfg = gen_libs.transpose_dict(slv_cfg, kwargs.get("slv_key", {}))
+            slaves = mysql_libs.create_slv_array(slv_cfg)
+
+        call_run_chk(args_array, func_dict, master, slaves)
+
+        conn_list = [slv for slv in slaves if slv.conn]
+
+        if master and master.conn:
+            conn_list.append(master)
+
+        mysql_libs.disconnect(conn_list)
 
 
 def main():
@@ -783,6 +902,11 @@ def main():
     opt_or_dict_list = {"-c": ["-s"]}
     opt_req_list = ["-d"]
     opt_val_list = ["-d", "-c", "-p", "-s", "-o", "-b", "-m", "-u", "-t", "-y"]
+    slv_key = {"sid": "int", "port": "int", "cfg_file": "None",
+               "ssl_client_ca": "None", "ssl_ca_path": "None",
+               "ssl_client_key": "None", "ssl_client_cert": "None",
+               "ssl_client_flag": "int", "ssl_disabled": "bool",
+               "ssl_verify_id": "bool", "ssl_verify_cert": "bool"}
 
     # Process argument list from command line.
     args_array = arg_parser.arg_parse2(cmdline.argv, opt_val_list,
@@ -799,7 +923,7 @@ def main():
         try:
             proglock = gen_class.ProgramLock(cmdline.argv,
                                              args_array.get("-y", ""))
-            run_program(args_array, func_dict)
+            run_program(args_array, func_dict, slv_key=slv_key)
             del proglock
 
         except gen_class.SingleInstanceException:

@@ -42,13 +42,13 @@ class SlaveRep(object):
     Description:  Class stub holder for mysql_class.SlaveRep class.
 
     Methods:
-        __init__ -> Class initialization.
-        get_time -> Stub method holder for SlaveRep.get_time.
-        upd_slv_time -> Stub method holder for SlaveRep.upd_slv_time.
+        __init__
+        get_time
+        upd_slv_time
 
     """
 
-    def __init__(self, lag_time=1):
+    def __init__(self, lag_time=1, conn="Connection Instance"):
 
         """Method:  __init__
 
@@ -59,6 +59,7 @@ class SlaveRep(object):
         """
 
         self.lag_time = lag_time
+        self.conn = conn
 
     def get_time(self):
 
@@ -92,10 +93,16 @@ class UnitTest(unittest.TestCase):
     Description:  Class which is a representation of a unit testing.
 
     Methods:
-        setUp -> Initialize testing environment.
-        test_lag_json -> Test with time lag to JSON.
-        test_lag_stdout -> Test with time lag to standard out.
-        test_no_lag -> Test with no time lag.
+        setUp
+        test_mysql_down_std
+        test_mysql_down_json
+        test_lag_one2
+        test_lag_one
+        test_lag_zero
+        test_lag_none
+        test_lag_json
+        test_lag_stdout
+        test_no_lag
 
     """
 
@@ -110,11 +117,114 @@ class UnitTest(unittest.TestCase):
         """
 
         self.slave = SlaveRep()
+        self.slave2 = SlaveRep(lag_time=None)
+        self.slave3 = SlaveRep(lag_time=0)
+        self.slave4 = SlaveRep(lag_time=None, conn=None)
         self.name = "SlaveName"
         self.json_fmt = False
         self.json_fmt2 = True
         self.time_lag0 = 0
         self.time_lag1 = 1
+        self.time_lag2 = None
+
+    @mock.patch("time.sleep", mock.Mock(return_value=True))
+    def test_mysql_down_std(self):
+
+        """Function:  test_mysql_down_std
+
+        Description:  Test with MySQL is down in standard format.
+
+        Arguments:
+
+        """
+
+        with gen_libs.no_std_out():
+            self.assertEqual(
+                mysql_rep_admin._process_time_lag(
+                    self.slave4, self.time_lag2, self.name, self.json_fmt),
+                self.time_lag2)
+
+    @mock.patch("time.sleep", mock.Mock(return_value=True))
+    def test_mysql_down_json(self):
+
+        """Function:  test_mysql_down_json
+
+        Description:  Test with MySQL is down in JSON format.
+
+        Arguments:
+
+        """
+
+        self.assertEqual(
+            mysql_rep_admin._process_time_lag(
+                self.slave4, self.time_lag2, self.name, self.json_fmt2),
+            self.time_lag2)
+
+    @mock.patch("time.sleep", mock.Mock(return_value=True))
+    def test_lag_one2(self):
+
+        """Function:  test_lag_one2
+
+        Description:  Test with time lag set to one and then clears.
+
+        Arguments:
+
+        """
+
+        self.assertEqual(
+            mysql_rep_admin._process_time_lag(
+                self.slave3, self.time_lag1, self.name, self.json_fmt),
+            self.time_lag0)
+
+    @mock.patch("time.sleep", mock.Mock(return_value=True))
+    def test_lag_one(self):
+
+        """Function:  test_lag_one
+
+        Description:  Test with time lag set to one.
+
+        Arguments:
+
+        """
+
+        with gen_libs.no_std_out():
+            self.assertEqual(
+                mysql_rep_admin._process_time_lag(
+                    self.slave, self.time_lag1, self.name, self.json_fmt),
+                self.time_lag1)
+
+    @mock.patch("time.sleep", mock.Mock(return_value=True))
+    def test_lag_zero(self):
+
+        """Function:  test_lag_zero
+
+        Description:  Test with time lag set to zero.
+
+        Arguments:
+
+        """
+
+        self.assertEqual(
+            mysql_rep_admin._process_time_lag(
+                self.slave, self.time_lag0, self.name, self.json_fmt),
+            self.time_lag0)
+
+    @mock.patch("time.sleep", mock.Mock(return_value=True))
+    def test_lag_none(self):
+
+        """Function:  test_lag_none
+
+        Description:  Test with time lag set to None.
+
+        Arguments:
+
+        """
+
+        with gen_libs.no_std_out():
+            self.assertEqual(
+                mysql_rep_admin._process_time_lag(
+                    self.slave2, self.time_lag2, self.name, self.json_fmt),
+                self.time_lag2)
 
     @mock.patch("time.sleep", mock.Mock(return_value=True))
     def test_lag_json(self):

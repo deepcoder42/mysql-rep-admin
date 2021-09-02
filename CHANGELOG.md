@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 The format is based on "Keep a Changelog".  This project adheres to Semantic Versioning.
 
 
+## [3.2.0] - 2021-08-19
+- Updated to work in MySQL 8.0 and 5.7 environments.
+- Updated to work in a SSL environment.
+- Updated to use the mysql_libs v5.2.2 library.
+- Updated to use gen_libs v2.8.4 library.
+
+### Changed
+- \_chk_other:  Check version to determine how to process retry and refactored the "if" statements.
+- chk_slv_other:  Add slv.version argument to \_chk_other call.
+- main:  Added slave configuration transpose data.
+- run_program:  Added call to gen_libs.transpose_dict function, replaced cmds_gen.disconnect with mysql_libs.disconnect, process status connection on MySQL connection, and replaced cmds_gen.create_cfg_array with call to gen_libs.create_cfg_array.
+- Removed unnecessary \*\*kwargs in function argument list.
+- config/slave.txt.TEMPLATE: Added SSL configuration options.
+- config/mongo.py.TEMPLATE:  Added SSL configuration options.
+- config/mysql_cfg.py.TEMPLATE:  Added SSL configuration options.
+- config/mysql.cfg.TEMPLATE:  Added SSL configuration options.
+- Documentation updates.
+
+## Removed
+- cmds_gen module.
+
+## [3.1.2] - 2020-11-23
+- Updated to use the mysql_libs v5.0.3 library.
+- Verified to work with pymongo v3.8.0.
+- Updated to be used in FIPS 140-2 environment.
+- Updated to work with (much older) mysql.connector v1.1.6 library module.
+
+### Fixed
+- chk_slv_err, \_process_time_lag:  Detected when mysql server is down.
+- \_process_time_lag:  Detected when rep agent is down for -T option to standard out.
+- chk_slv_err, chk_mst_log, \_chk_other, chk_slv_thr:  Fixed print formatting error.
+- \_chk_other:  Fixed when slave instance is down.
+- run_program:  Fixed disconnecting from down master/slave instance.
+- run_program:  Corrected passing incorrect keyword argument for os_type.
+- config/mysql.cfg.TEMPLATE:  Point to correct socket file.
+
+### Changed
+- \_process_json:  Captured and process status return from mongo_libs.ins_doc call.
+- run_program:  Updated configuration names to match changes in configuration file.
+- config/mongo.py.TEMPLATE:  Changed configuration entry and added a number of configuration entries.
+- config/slave.txt.TEMPLATE:  Changed configuration entry and added a number of configuration entries.
+- config/mysql_cfg.py.TEMPLATE:  Changed configuration entry.
+- Documentation changes.
+
+
 ## [3.1.1] - 2020-05-21
 ### Fixed
 - main: Fixed handling command line arguments from SonarQube scan finding.
@@ -27,8 +72,8 @@ The format is based on "Keep a Changelog".  This project adheres to Semantic Ver
 - call_run_chk:  Checked for "-f" option and passed JSON identation setting to functions.
 - main:  Made "-s" option a requirement for "-A", "-C", "-D", "-E", "-O" and "-T" options.
 - chk_slv_time:  Changed JSON document "Master" entry to "Server".
-- add_miss_slaves:  Converted JSON document to CamelCase.
-- chk_slv_time:  Converted JSON document to CamelCase.
+- add_miss_slaves:  Converted JSON document to PascalCase.
+- chk_slv_time:  Converted JSON document to PascalCase.
 - main:  Added ProgramLock class to implement program locking.
 - main:  Made "-c" option a requirement for "-B", "-C", and "-T" options.
 - \_chk_other: Used global variable for template printing.
@@ -88,14 +133,11 @@ Breaking Change
 - chk_slv_other:  Replaced section of code with call to \_chk_other.
 - call_run_chk:  Intersect args_array & func_dict to run options.
 - main:  Refactored initial program checks.
-- run_program:  Added \*\*kwargs to argument list.
-- call_run_chk:  Added \*\*kwargs to argument list.
+- call_run_chk, run_program:  Added \*\*kwargs to argument list.
 - Changed variable names to standard naming convention.
-- chk_slv_time:  Changed output to camelCase.
-- add_miss_slaves:  Changed output to camelCase.
+- add_miss_slaves, chk_slv_time:  Changed output to PascalCase.
 - run_program:  Modified to use the updated mysql_class module.
 - main:  Removed -I and -R arguments from the program options.
-- run_program:  Modified to use the updated mysql_class module.
 - run_program:  Replaced the code to load the slave files into an array with a call to cmds_gen.create_cfg_array().
 
 ### Removed
@@ -104,16 +146,7 @@ Breaking Change
 - rpt_srv_info:  No longer being implemented.
 
 ### Fixed:
-- rpt_mst_log:  Fixed problem with mutable default arguments issue.
-- rpt_slv_log:  Fixed problem with mutable default arguments issue.
-- chk_mst_log:  Fixed problem with mutable default arguments issue.
-- chk_slv_thr:  Fixed problem with mutable default arguments issue.
-- chk_slv_err:  Fixed problem with mutable default arguments issue.
-- add_miss_slaves:  Fixed problem with mutable default arguments issue.
-- chk_slv_time:  Fixed problem with mutable default arguments issue.
-- chk_slv_other:  Fixed problem with mutable default arguments issue.
-- call_run_chk:  Fixed problem with mutable default arguments issue.
-- run_program:  Fixed problem with mutable default arguments issue.
+- rpt_slv_log, chk_mst_log, chk_slv_thr, chk_slv_err, add_miss_slaves, chk_slv_time, chk_slv_other, call_run_chk, run_program, rpt_mst_log:  Fixed problem with mutable default arguments issue.
 - 
 ### Added
 - \_process_json:  Private function for chk_slv_time().  Process JSON data.
@@ -157,11 +190,13 @@ Breaking Change
 
 
 ## [1.7.0] - 2016-11-04
+### Fixed
+- Chk_Mst_Log:  Corrected a formatting error and replaced two sections of code with call to Chk_Slv.
+
 ### Changed
 - MySQL 5.6 (GTID Enabled) - Added GTID attributes to a number of functions.
 - Rpt_Mst_Log:  Print master GTID position.
 - Rpt_Slv_Log:  Print slave GTID information.
-- Chk_Mst_Log:  Corrected a formatting error and replaced two sections of code with call to Chk_Slv.
 - Chk_Slv_Err:  Added IO and SQL error timestamps to output.
 
 ### Added
@@ -169,11 +204,13 @@ Breaking Change
 
 
 ## [1.6.0] - 2016-09-20
+### Fixed
+- Chk_Mst_Log:  Fixed error in if statement variable.
+
 ### Changed
 - Run_Program:  Changed Setup_Class_Run_Chks to Run_Program to be inline with the other programs.  Changed -m to -c.  Added disconnect procedures for class instances.  Allow the -d option to be added to the -s file name if the -s does not include a path directory.
 - main:  Changed the argument option values to be inline with the other programs.
 - Call_Run_Chk:  Changed the argument option values to be inline with the other programs.
-- Chk_Mst_Log:  Fixed error in if statement variable.
 - Chk_Slv_Time:  Replaced a section of code with a library call to cmds_mongo.JSON_Prt_Ins_2_DB.
 
 
